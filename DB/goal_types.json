@@ -1,0 +1,5 @@
+[
+  {"model": "workouts.goaltype", "pk": 1, "fields": {"name": "Strength", "description": "Maximize force output with heavy loads and low reps. Focus on compound movements and progressive overload."}},
+  {"model": "workouts.goaltype", "pk": 2, "fields": {"name": "Hypertrophy", "description": "Maximize muscle size through moderate loads, higher volume, and controlled time under tension."}},
+  {"model": "workouts.goaltype", "pk": 3, "fields": {"name": "Endurance", "description": "Build muscular and cardiovascular endurance through lighter loads, high reps, and shorter rest periods."}}
+]

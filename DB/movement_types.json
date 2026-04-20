@@ -1,0 +1,14 @@
+[
+  {"model": "workouts.movementtype", "pk": 1,  "fields": {"name": "Press",          "description": "Pushing movement away from the body"}},
+  {"model": "workouts.movementtype", "pk": 2,  "fields": {"name": "Fly",            "description": "Adduction-focused upper body arc movement"}},
+  {"model": "workouts.movementtype", "pk": 3,  "fields": {"name": "Row",            "description": "Horizontal pulling movement toward the body"}},
+  {"model": "workouts.movementtype", "pk": 4,  "fields": {"name": "Pulldown",       "description": "Vertical pulling movement from overhead"}},
+  {"model": "workouts.movementtype", "pk": 5,  "fields": {"name": "Curl",           "description": "Elbow flexion movement"}},
+  {"model": "workouts.movementtype", "pk": 6,  "fields": {"name": "Extension",      "description": "Elbow or knee extension movement"}},
+  {"model": "workouts.movementtype", "pk": 7,  "fields": {"name": "Squat",          "description": "Knee-dominant lower body movement"}},
+  {"model": "workouts.movementtype", "pk": 8,  "fields": {"name": "Hinge",          "description": "Hip-dominant lower body movement"}},
+  {"model": "workouts.movementtype", "pk": 9,  "fields": {"name": "Core Stability", "description": "Trunk stabilization and anti-rotation movement"}},
+  {"model": "workouts.movementtype", "pk": 10, "fields": {"name": "Lunge",          "description": "Unilateral knee-dominant lower body movement"}},
+  {"model": "workouts.movementtype", "pk": 11, "fields": {"name": "Raise",          "description": "Shoulder abduction or flexion raise movement"}},
+  {"model": "workouts.movementtype", "pk": 12, "fields": {"name": "Cardio",         "description": "Cardiovascular conditioning movement"}}
+]

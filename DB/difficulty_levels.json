@@ -1,0 +1,5 @@
+[
+  {"model": "workouts.difficultylevel", "pk": 1, "fields": {"name": "Beginner", "order_rank": 1}},
+  {"model": "workouts.difficultylevel", "pk": 2, "fields": {"name": "Intermediate", "order_rank": 2}},
+  {"model": "workouts.difficultylevel", "pk": 3, "fields": {"name": "Advanced", "order_rank": 3}}
+]

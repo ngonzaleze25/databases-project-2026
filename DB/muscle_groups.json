@@ -1,0 +1,14 @@
+[
+  {"model": "workouts.musclegroup", "pk": 1, "fields": {"name": "Chest", "region": "Upper Body", "movement_category": "Push"}},
+  {"model": "workouts.musclegroup", "pk": 2, "fields": {"name": "Triceps", "region": "Upper Body", "movement_category": "Push"}},
+  {"model": "workouts.musclegroup", "pk": 3, "fields": {"name": "Shoulders", "region": "Upper Body", "movement_category": "Push"}},
+  {"model": "workouts.musclegroup", "pk": 4, "fields": {"name": "Back", "region": "Upper Body", "movement_category": "Pull"}},
+  {"model": "workouts.musclegroup", "pk": 5, "fields": {"name": "Biceps", "region": "Upper Body", "movement_category": "Pull"}},
+  {"model": "workouts.musclegroup", "pk": 6, "fields": {"name": "Rear Delts", "region": "Upper Body", "movement_category": "Pull"}},
+  {"model": "workouts.musclegroup", "pk": 7, "fields": {"name": "Quads", "region": "Lower Body", "movement_category": "Legs"}},
+  {"model": "workouts.musclegroup", "pk": 8, "fields": {"name": "Hamstrings", "region": "Lower Body", "movement_category": "Legs"}},
+  {"model": "workouts.musclegroup", "pk": 9, "fields": {"name": "Glutes", "region": "Lower Body", "movement_category": "Legs"}},
+  {"model": "workouts.musclegroup", "pk": 10, "fields": {"name": "Calves", "region": "Lower Body", "movement_category": "Legs"}},
+  {"model": "workouts.musclegroup", "pk": 11, "fields": {"name": "Core", "region": "Torso", "movement_category": "Core"}},
+  {"model": "workouts.musclegroup", "pk": 12, "fields": {"name": "Cardio", "region": "Full Body", "movement_category": "Cardio"}}
+]
