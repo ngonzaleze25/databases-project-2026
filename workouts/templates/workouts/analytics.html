@@ -1,0 +1,125 @@
+{% extends "workouts/base.html" %}
+
+{% block content %}
+<section class="page-section">
+  <div class="page-header">
+    <h1>Database Analytics</h1>
+    <p>Aggregated summaries across exercise. Powered by Django ORM GROUP BY queries.</p>
+  </div>
+
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <h2>By Muscle Group</h2>
+      <p>Counting primary muscle assignments only.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Muscle Group</th>
+            <th>Exercises</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in exercises_by_muscle %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2">No data found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="analytics-card">
+      <h2>By Difficulty</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Difficulty</th>
+            <th>Exercises</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in exercises_by_difficulty %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2">No data found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="analytics-card">
+      <h2>By Equipment</h2>
+      <p>Exercises compatible with each equipment type.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Equipment</th>
+            <th>Exercises</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in exercises_by_equipment %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2">No data found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="analytics-card">
+      <h2>Compound vs Isolation</h2>
+      <div class="analytics-split">
+        <div class="stat-box">
+          <div class="stat-number">{{ compound_total }}</div>
+          <div class="stat-label">Compound</div>
+        </div>
+        <div class="stat-vs">vs</div>
+        <div class="stat-box">
+          <div class="stat-number">{{ isolation_total }}</div>
+          <div class="stat-label">Isolation</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-card analytics-card-wide">
+      <h2>By Movement Type</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Movement</th>
+            <th>Exercises</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in exercises_by_movement %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2">No data found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "workouts/base.html" %}
+{% load static %}
+
+{% block title %}Build a Workout{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>Build Your Workout</h1>
+  <p class="page-subtitle">Select your target muscle, difficulty, and available equipment.</p>
+</div>
+
+<div class="card form-card">
+  <form method="post" action="{% url 'workout_result' %}">
+    {% csrf_token %}
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="{{ form.muscle_group.id_for_label }}">{{ form.muscle_group.label }}</label>
+        {{ form.muscle_group }}
+        {% if form.muscle_group.errors %}
+          <span class="form-error">{{ form.muscle_group.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
+        {{ form.difficulty }}
+        {% if form.difficulty.errors %}
+          <span class="form-error">{{ form.difficulty.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.num_exercises.id_for_label }}">{{ form.num_exercises.label }}</label>
+        {{ form.num_exercises }}
+        {% if form.num_exercises.errors %}
+          <span class="form-error">{{ form.num_exercises.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.goal_type.id_for_label }}">{{ form.goal_type.label }}</label>
+        {{ form.goal_type }}
+      </div>
+
+    </div>
+
+    <div class="form-group form-group--full">
+      <label>{{ form.equipment.label }}</label>
+      <p class="form-help">{{ form.equipment.help_text }}</p>
+      <div class="checkbox-grid">
+        {% for checkbox in form.equipment %}
+          <label class="checkbox-label">
+            {{ checkbox.tag }} {{ checkbox.choice_label }}
+          </label>
+        {% endfor %}
+      </div>
+      {% if form.equipment.errors %}
+        <span class="form-error">{{ form.equipment.errors|join:", " }}</span>
+      {% endif %}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Generate Workout &rarr;</button>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}

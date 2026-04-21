@@ -1,13 +1,13 @@
 [
-  {"model": "workouts.equipment", "pk": 1,  "fields": {"name": "Bodyweight",    "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 2,  "fields": {"name": "Dumbbell",      "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 3,  "fields": {"name": "Barbell",       "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 4,  "fields": {"name": "Cable",         "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 5,  "fields": {"name": "Machine",       "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 6,  "fields": {"name": "Kettlebell",    "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 7,  "fields": {"name": "Resistance Band","category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 8,  "fields": {"name": "Pull-up Bar",   "category": "Strength"}},
-  {"model": "workouts.equipment", "pk": 9,  "fields": {"name": "Treadmill",     "category": "Cardio"}},
-  {"model": "workouts.equipment", "pk": 10, "fields": {"name": "Stationary Bike","category": "Cardio"}},
-  {"model": "workouts.equipment", "pk": 11, "fields": {"name": "Rowing Machine", "category": "Cardio"}}
+  {"model": "workouts.equipment", "pk": 1,  "fields": {"name": "Bodyweight"}},
+  {"model": "workouts.equipment", "pk": 2,  "fields": {"name": "Dumbbell"}},
+  {"model": "workouts.equipment", "pk": 3,  "fields": {"name": "Barbell"}},
+  {"model": "workouts.equipment", "pk": 4,  "fields": {"name": "Cable"}},
+  {"model": "workouts.equipment", "pk": 5,  "fields": {"name": "Machine"}},
+  {"model": "workouts.equipment", "pk": 6,  "fields": {"name": "Kettlebell"}},
+  {"model": "workouts.equipment", "pk": 7,  "fields": {"name": "Resistance Band"}},
+  {"model": "workouts.equipment", "pk": 8,  "fields": {"name": "Pull-up Bar"}},
+  {"model": "workouts.equipment", "pk": 9,  "fields": {"name": "Treadmill"}},
+  {"model": "workouts.equipment", "pk": 10, "fields": {"name": "Stationary Bike"}},
+  {"model": "workouts.equipment", "pk": 11, "fields": {"name": "Rowing Machine"}}
 ]

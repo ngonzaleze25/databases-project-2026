@@ -1,0 +1,106 @@
+{% extends "workouts/base.html" %}
+{% load static %}
+
+{% block title %}Exercise Browser{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>Exercise Browser</h1>
+  <p class="page-subtitle">{{ total }} exercise{{ total|pluralize }} in the database.</p>
+</div>
+
+{# Filter form — GET so filters are bookmarkable #}
+<div class="card filter-card">
+  <form method="get" class="filter-form">
+    <div class="filter-grid">
+
+      <div class="form-group">
+        <label>{{ form.muscle_group.label }}</label>
+        {{ form.muscle_group }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.difficulty.label }}</label>
+        {{ form.difficulty }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.equipment.label }}</label>
+        {{ form.equipment }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.movement_type.label }}</label>
+        {{ form.movement_type }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.is_compound.label }}</label>
+        {{ form.is_compound }}
+      </div>
+
+      <div class="form-group form-group--actions">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'exercise_list' %}" class="btn btn-secondary">Clear</a>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+{# Results grid #}
+{% if exercises %}
+  <div class="exercise-grid">
+    {% for exercise in exercises %}
+      <a href="{% url 'exercise_detail' exercise.pk %}" class="exercise-card">
+
+        <div class="exercise-card__media">
+          {% if exercise.image %}
+            <img src="{% static exercise.image.image_path %}"
+                 alt="{{ exercise.name }}"
+                 onerror="this.style.display='none'">
+          {% else %}
+            <div class="exercise-card__placeholder">{{ exercise.name|first }}</div>
+          {% endif %}
+        </div>
+
+        <div class="exercise-card__body">
+          <h3 class="exercise-card__name">{{ exercise.name }}</h3>
+
+          <div class="exercise-card__meta">
+            <span class="tag">{{ exercise.difficulty }}</span>
+            {% if exercise.is_compound %}
+              <span class="tag tag--compound">Compound</span>
+            {% else %}
+              <span class="tag tag--isolation">Isolation</span>
+            {% endif %}
+          </div>
+
+          <p class="exercise-card__muscles">
+            {% for link in exercise.exercise_muscle_groups.all %}
+              {% if link.role == 'primary' %}
+                <span class="muscle-badge muscle-badge--primary">{{ link.muscle_group }}</span>
+              {% endif %}
+            {% endfor %}
+          </p>
+
+          <p class="exercise-card__equipment">
+            {% for eq_link in exercise.exercise_equipment.all %}
+              <span class="equip-badge">{{ eq_link.equipment }}</span>
+            {% endfor %}
+          </p>
+        </div>
+
+      </a>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="empty-state">
+    <p>No exercises match your filters.</p>
+    <a href="{% url 'exercise_list' %}" class="btn btn-secondary">Clear Filters</a>
+  </div>
+{% endif %}
+
+{% endblock %}

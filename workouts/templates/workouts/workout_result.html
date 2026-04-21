@@ -1,0 +1,96 @@
+{% extends "workouts/base.html" %}
+{% load static %}
+
+{% block title %}Your Workout{% endblock %}
+
+{% block content %}
+
+<div class="page-header page-header--split">
+  <div>
+    <h1>Your Workout</h1>
+    <p class="page-subtitle">
+      {{ muscle_group }} &bull; {{ difficulty }}
+      {% if goal_type %}&bull; {{ goal_type }}{% endif %}
+      &bull; {{ workout_items|length }} exercise{{ workout_items|length|pluralize }}
+    </p>
+  </div>
+  <a href="{% url 'home' %}" class="btn btn-secondary">← Build Another</a>
+</div>
+
+{% if workout_items %}
+  <div class="workout-list">
+    {% for item in workout_items %}
+      <div class="workout-card slot-{{ item.slot }}">
+
+        <div class="workout-card__slot-badge slot-badge--{{ item.slot }}">
+          {{ item.slot|upper }}
+        </div>
+
+        <div class="workout-card__media">
+          {% if item.exercise.image %}
+            <img src="{% static item.exercise.image.image_path %}"
+                 alt="{{ item.exercise.name }}"
+                 onerror="this.style.display='none'">
+          {% else %}
+            <div class="workout-card__no-image">{{ item.exercise.name|first }}</div>
+          {% endif %}
+        </div>
+
+        <div class="workout-card__body">
+          <h2 class="workout-card__name">
+            <a href="{% url 'exercise_detail' item.exercise.pk %}">{{ item.exercise.name }}</a>
+          </h2>
+
+          <div class="workout-card__meta">
+            <span class="tag">{{ item.exercise.difficulty }}</span>
+            <span class="tag">{{ item.exercise.movement_type }}</span>
+            {% if item.exercise.is_compound %}
+              <span class="tag tag--compound">Compound</span>
+            {% else %}
+              <span class="tag tag--isolation">Isolation</span>
+            {% endif %}
+          </div>
+
+          {# Primary muscles via junction table #}
+          <p class="workout-card__muscles">
+            <strong>Muscles:</strong>
+            {% for link in item.exercise.exercise_muscle_groups.all %}
+              {% if link.role == 'primary' %}
+                <span class="muscle-badge muscle-badge--primary">{{ link.muscle_group }}</span>
+              {% elif link.role == 'secondary' %}
+                <span class="muscle-badge muscle-badge--secondary">{{ link.muscle_group }}</span>
+              {% endif %}
+            {% endfor %}
+          </p>
+
+          {# Sets/reps — from goal profile if available, fallback to defaults #}
+          {% with profile=item.exercise.goal_profiles.first %}
+            {% if profile %}
+              <p class="workout-card__prescription">
+                <strong>{{ profile.default_sets }} sets</strong>
+                &times; {{ profile.rep_display }}
+                {% if profile.rest_seconds %}
+                  &mdash; {{ profile.rest_seconds }}s rest
+                {% endif %}
+              </p>
+            {% else %}
+              <p class="workout-card__prescription">
+                <strong>{{ item.exercise.default_sets }} sets</strong>
+                &times; {{ item.exercise.default_reps }} reps
+              </p>
+            {% endif %}
+          {% endwith %}
+
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="empty-state">
+    <p>No exercises found for your selection. Try different equipment or difficulty.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">Go Back</a>
+  </div>
+{% endif %}
+
+{% endblock %}

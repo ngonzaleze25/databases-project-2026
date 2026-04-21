@@ -1,0 +1,113 @@
+{% extends "workouts/base.html" %}
+{% load static %}
+
+{% block title %}{{ exercise.name }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header page-header--split">
+  <div>
+    <a href="{% url 'exercise_list' %}" class="breadcrumb">&larr; Back to Browser</a>
+    <h1>{{ exercise.name }}</h1>
+    <div class="exercise-meta-badges">
+      <span class="tag">{{ exercise.difficulty }}</span>
+      <span class="tag">{{ exercise.movement_type }}</span>
+      {% if exercise.is_compound %}
+        <span class="tag tag--compound">Compound</span>
+      {% else %}
+        <span class="tag tag--isolation">Isolation</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="detail-layout">
+
+  <div class="detail-image-col">
+    {% if exercise.image %}
+      <img class="detail-image"
+           src="{% static exercise.image.image_path %}"
+           alt="{{ exercise.name }}"
+           onerror="this.style.display='none'">
+      {% if exercise.image.highlight_notes %}
+        <p class="image-notes">{{ exercise.image.highlight_notes }}</p>
+      {% endif %}
+    {% else %}
+      <div class="detail-image-placeholder">{{ exercise.name|first }}</div>
+    {% endif %}
+  </div>
+
+  <div class="detail-info-col">
+
+    {% if exercise.description %}
+      <section class="detail-section">
+        <h2>Description</h2>
+        <p>{{ exercise.description }}</p>
+      </section>
+    {% endif %}
+
+    <section class="detail-section">
+      <h2>Muscles Worked</h2>
+      {% if muscles_worked %}
+        <div class="equipment-row">
+          {% for item in muscles_worked %}
+            <span class="muscle-badge muscle-badge--primary">
+              {{ item.muscle_group.name }}{% if item.role %} — {{ item.role }}{% endif %}
+            </span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No muscle data.</p>
+      {% endif %}
+    </section>
+
+    <section class="detail-section">
+      <h2>Compatible Equipment</h2>
+      {% if compatible_equipment %}
+        <div class="equipment-row">
+          {% for item in compatible_equipment %}
+            <span class="equip-badge equip-badge--large">{{ item.equipment.name }}</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No equipment data.</p>
+      {% endif %}
+    </section>
+
+    {% if exercise.exercise_goal_profiles.all %}
+      <section class="detail-section">
+        <h2>Prescriptions by Goal</h2>
+        <table class="goal-table">
+          <thead>
+            <tr>
+              <th>Goal</th>
+              <th>Sets</th>
+              <th>Reps / Time</th>
+              <th>Rest</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for profile in exercise.exercise_goal_profiles.all %}
+              <tr>
+                <td><strong>{{ profile.goal_type }}</strong></td>
+                <td>{{ profile.default_sets }}</td>
+                <td>{{ profile.rep_display }}</td>
+                <td>{% if profile.rest_seconds %}{{ profile.rest_seconds }}s{% else %}—{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    {% endif %}
+
+    {% if exercise.instructions %}
+      <section class="detail-section">
+        <h2>Instructions</h2>
+        <div class="instructions-block">{{ exercise.instructions }}</div>
+      </section>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}
