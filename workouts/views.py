@@ -21,11 +21,38 @@ def home(request):
 def workout_result(request):
     form = WorkoutBuilderForm(request.POST or None)
 
-    exercises = Exercise.objects.all()[:5]
+    exercises = Exercise.objects.all()
+    recommended_foods = None
+    goal_type_name = None
+
+    if request.method == 'POST' and form.is_valid():
+        muscle_group = form.cleaned_data.get('muscle_group')
+        difficulty = form.cleaned_data.get('difficulty')
+        equipment = form.cleaned_data.get('equipment')
+        goal_type = form.cleaned_data.get('goal_type')
+        num_exercises = form.cleaned_data.get('num_exercises') or 5
+        
+        # Basic filtering logic
+        if muscle_group:
+            exercises = exercises.filter(exercise_muscle_groups__muscle_group=muscle_group)
+        if difficulty:
+            exercises = exercises.filter(difficulty=difficulty)
+        if equipment:
+            exercises = exercises.filter(exercise_equipment__equipment__in=equipment).distinct()
+        
+        # Get nutrition recommendations based on goal
+        if goal_type:
+            goal_type_name = goal_type.name
+            from .models import FoodItem
+            recommended_foods = FoodItem.objects.filter(ideal_for_goal=goal_type)
+
+        exercises = exercises[:num_exercises] # Limit for display
 
     context = {
         "form": form,
         "exercises": exercises,
+        "recommended_foods": recommended_foods,
+        "goal_type_name": goal_type_name,
     }
     return render(request, "workouts/workout_result.html", context)
 

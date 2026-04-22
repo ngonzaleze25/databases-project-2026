@@ -459,3 +459,37 @@ class SavedWorkoutExercise(models.Model):
 
     def __str__(self):
         return f"#{self.exercise_order} {self.exercise.name} ({self.slot_type})"
+
+
+# ---------------------------------------------------------------------------
+# 6. Nutrition Data Source (Ambition Project)
+# ---------------------------------------------------------------------------
+
+class FoodItem(models.Model):
+    """
+    Nutrition data source to combine with the workout builder.
+    Provides post-workout meal recommendations based on the user's fitness goal.
+    This demonstrates joining two distinct data domains (Workouts + Nutrition) to add value.
+    """
+    food_id           = models.AutoField(primary_key=True)
+    name              = models.CharField(max_length=200)
+    calories_per_100g = models.PositiveIntegerField()
+    protein_g         = models.FloatField()
+    carbs_g           = models.FloatField()
+    fat_g             = models.FloatField()
+    category          = models.CharField(max_length=100)  # e.g., 'Protein', 'Carb', 'Fat'
+    
+    # The crucial link between the Workout domain and Nutrition domain
+    ideal_for_goal    = models.ForeignKey(
+                            GoalType,
+                            on_delete=models.SET_NULL,
+                            null=True, blank=True,
+                            related_name='recommended_foods'
+                        )
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+

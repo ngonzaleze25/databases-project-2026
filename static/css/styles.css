@@ -695,3 +695,55 @@ select:focus, input:focus {
   .site-nav          { gap: 1rem; }
   .page-header h1    { font-size: 2rem; }
 }
+
+/* ----------------------------------------------------------
+   Nutrition Data (Ambition Project)
+   ---------------------------------------------------------- */
+.nutrition-section {
+  background: var(--dark-mid) !important;
+  border: 1px solid var(--border) !important;
+  border-top: 3px solid var(--accent) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 1.5rem !important;
+  margin-top: 2.5rem !important;
+}
+
+.nutrition-section h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 0.5rem;
+}
+
+.nutrition-section p {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.nutrition-section .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.nutrition-section .table th {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.nutrition-section .table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  color: var(--light);
+}
+
+.nutrition-section .table td strong {
+  color: var(--white);
+  font-weight: 600;
+}
