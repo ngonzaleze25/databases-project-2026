@@ -9,14 +9,19 @@
   <div>
     <a href="{% url 'exercise_list' %}" class="breadcrumb">&larr; Back to Browser</a>
     <h1>{{ exercise.name }}</h1>
-    <div class="exercise-meta-badges">
-      <span class="tag">{{ exercise.difficulty }}</span>
-      <span class="tag">{{ exercise.movement_type }}</span>
-      {% if exercise.is_compound %}
-        <span class="tag tag--compound">Compound</span>
-      {% else %}
-        <span class="tag tag--isolation">Isolation</span>
-      {% endif %}
+    <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+      <div class="exercise-meta-badges" style="margin-top: 0;">
+        <span class="tag">{{ exercise.difficulty }}</span>
+        <span class="tag">{{ exercise.movement_type }}</span>
+        {% if exercise.is_compound %}
+          <span class="tag tag--compound">Compound</span>
+        {% else %}
+          <span class="tag tag--isolation">Isolation</span>
+        {% endif %}
+      </div>
+      <a href="https://www.youtube.com/results?search_query={{ exercise.name|urlencode }}+exercise+tutorial" target="_blank" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+        ▶ Watch YouTube Tutorial
+      </a>
     </div>
   </div>
 </div>

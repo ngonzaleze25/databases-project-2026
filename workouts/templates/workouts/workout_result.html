@@ -37,9 +37,14 @@
         </div>
 
         <div class="workout-card__body">
-          <h2 class="workout-card__name">
-            <a href="{% url 'exercise_detail' item.exercise.pk %}">{{ item.exercise.name }}</a>
-          </h2>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+            <h2 class="workout-card__name" style="margin-bottom: 0;">
+              <a href="{% url 'exercise_detail' item.exercise.pk %}">{{ item.exercise.name }}</a>
+            </h2>
+            <a href="https://www.youtube.com/results?search_query={{ item.exercise.name|urlencode }}+exercise+tutorial" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; border-color: rgba(255,255,255,0.2);">
+              ▶ Tutorial
+            </a>
+          </div>
 
           <div class="workout-card__meta">
             <span class="tag">{{ item.exercise.difficulty }}</span>
