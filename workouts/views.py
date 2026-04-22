@@ -21,9 +21,11 @@ def home(request):
 def workout_result(request):
     form = WorkoutBuilderForm(request.POST or None)
 
-    exercises = Exercise.objects.all()
+    workout_items = []
     recommended_foods = None
     goal_type_name = None
+    muscle_group_name = None
+    difficulty_name = None
 
     if request.method == 'POST' and form.is_valid():
         muscle_group = form.cleaned_data.get('muscle_group')
@@ -32,27 +34,93 @@ def workout_result(request):
         goal_type = form.cleaned_data.get('goal_type')
         num_exercises = form.cleaned_data.get('num_exercises') or 5
         
-        # Basic filtering logic
         if muscle_group:
-            exercises = exercises.filter(exercise_muscle_groups__muscle_group=muscle_group)
+            muscle_group_name = muscle_group.name
         if difficulty:
-            exercises = exercises.filter(difficulty=difficulty)
+            difficulty_name = difficulty.name
+            
+        base_qs = Exercise.objects.all()
+        if difficulty:
+            base_qs = base_qs.filter(difficulty=difficulty)
         if equipment:
-            exercises = exercises.filter(exercise_equipment__equipment__in=equipment).distinct()
-        
+            base_qs = base_qs.filter(exercise_equipment__equipment__in=equipment).distinct()
+
+        if muscle_group:
+            used_ids = []
+            
+            # 1. Primary Compound Exercise
+            compounds = base_qs.filter(
+                is_compound=True,
+                exercise_muscle_groups__muscle_group=muscle_group,
+                exercise_muscle_groups__role='primary'
+            ).order_by('?')
+            
+            compound_ex = compounds.first()
+            if compound_ex:
+                workout_items.append({'exercise': compound_ex, 'slot': 'compound'})
+                used_ids.append(compound_ex.pk)
+
+            # 2. Supporting Muscle logic
+            from .models import MuscleGroupRelationship
+            supporting_rel = MuscleGroupRelationship.objects.filter(
+                source_muscle_group=muscle_group,
+                relationship_type='supporting'
+            ).order_by('?').first()
+            
+            supporting_muscle = supporting_rel.related_muscle_group if supporting_rel else None
+            
+            remaining_slots = num_exercises - len(workout_items)
+            supporting_count = 1 if (remaining_slots >= 2 and supporting_muscle) else 0
+            targeted_count = remaining_slots - supporting_count
+
+            # 3. Targeted Exercises
+            targeted_qs = base_qs.filter(
+                exercise_muscle_groups__muscle_group=muscle_group,
+                exercise_muscle_groups__role='primary'
+            ).exclude(pk__in=used_ids).order_by('?')
+            
+            for ex in targeted_qs[:targeted_count]:
+                workout_items.append({'exercise': ex, 'slot': 'targeted'})
+                used_ids.append(ex.pk)
+
+            # 4. Supporting Exercise
+            if supporting_count > 0 and supporting_muscle:
+                supporting_qs = base_qs.filter(
+                    exercise_muscle_groups__muscle_group=supporting_muscle,
+                    exercise_muscle_groups__role='primary'
+                ).exclude(pk__in=used_ids).order_by('?')
+                
+                for ex in supporting_qs[:supporting_count]:
+                    workout_items.append({'exercise': ex, 'slot': 'supporting'})
+                    used_ids.append(ex.pk)
+
+            # 5. Pad if necessary
+            if len(workout_items) < num_exercises:
+                pad_qs = base_qs.filter(
+                    exercise_muscle_groups__muscle_group=muscle_group
+                ).exclude(pk__in=used_ids).order_by('?')
+                for ex in pad_qs[:num_exercises - len(workout_items)]:
+                    workout_items.append({'exercise': ex, 'slot': 'targeted'})
+                    used_ids.append(ex.pk)
+        else:
+            # Fallback if no muscle group selected
+            exercises_fallback = base_qs.order_by('?')[:num_exercises]
+            for ex in exercises_fallback:
+                workout_items.append({'exercise': ex, 'slot': 'targeted'})
+
         # Get nutrition recommendations based on goal
         if goal_type:
             goal_type_name = goal_type.name
             from .models import FoodItem
             recommended_foods = FoodItem.objects.filter(ideal_for_goal=goal_type)
 
-        exercises = exercises[:num_exercises] # Limit for display
-
     context = {
         "form": form,
-        "exercises": exercises,
+        "workout_items": workout_items,
         "recommended_foods": recommended_foods,
         "goal_type_name": goal_type_name,
+        "muscle_group": muscle_group_name,
+        "difficulty": difficulty_name,
     }
     return render(request, "workouts/workout_result.html", context)
 
