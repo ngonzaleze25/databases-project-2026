@@ -1,0 +1,88 @@
+{% extends "workouts/base.html" %}
+{% load static %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header page-header--split">
+  <div>
+    <h1>My Dashboard</h1>
+    <p class="page-subtitle">
+      {% if user_obj %}
+        Welcome back, {{ user_obj.name }} ({{ user_obj.email }})
+      {% else %}
+        Enter your email to view your saved workouts.
+      {% endif %}
+    </p>
+  </div>
+  {% if user_obj %}
+    <a href="{% url 'dashboard_index' %}" class="btn btn-secondary">Switch User</a>
+  {% endif %}
+</div>
+
+{% if not user_obj %}
+<div class="card form-card">
+  <form method="post" action="{% url 'dashboard_index' %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" name="email" placeholder="john@example.com" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">View Dashboard</button>
+    </div>
+  </form>
+</div>
+{% else %}
+
+  {% if workouts %}
+    <div class="workout-list">
+      {% for workout in workouts %}
+        <div class="card" style="margin-bottom: 2rem;">
+          <h2 style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--accent);">
+            {{ workout.target_muscle_group|default:"Mixed" }} &bull; {{ workout.difficulty|default:"Any" }}
+          </h2>
+          <p class="form-help" style="margin-bottom: 1rem;">Saved on {{ workout.created_at|date:"F j, Y, g:i a" }}</p>
+          
+          <table class="table" style="margin-top: 1rem;">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>Exercise</th>
+                <th>Type</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for we in workout.workout_exercises.all %}
+                <tr>
+                  <td><strong>{{ we.exercise_order }}</strong></td>
+                  <td>
+                    <a href="{% url 'exercise_detail' we.exercise.pk %}" style="color: var(--white); text-decoration: none; font-weight: 600;">
+                      {{ we.exercise.name }}
+                    </a>
+                  </td>
+                  <td><span class="tag">{{ we.exercise.movement_type }}</span></td>
+                  <td>
+                    <div class="workout-card__slot-badge slot-badge--{{ we.slot_type }}" style="position: relative; top: 0; right: 0; display: inline-block;">
+                      {{ we.slot_type|upper }}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>You haven't saved any workouts yet.</p>
+      <a href="{% url 'home' %}" class="btn btn-primary">Build a Workout</a>
+    </div>
+  {% endif %}
+
+{% endif %}
+
+{% endblock %}

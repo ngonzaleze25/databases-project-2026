@@ -7,4 +7,7 @@ urlpatterns = [
     path("exercises/<int:pk>/", views.exercise_detail, name="exercise_detail"),
     path("analytics/", views.analytics, name="analytics"),
     path("workout/", views.workout_result, name="workout_result"),
+    path("workout/save/", views.save_workout, name="save_workout"),
+    path("dashboard/", views.dashboard, name="dashboard_index"),
+    path("dashboard/<str:email>/", views.dashboard, name="dashboard"),
 ]

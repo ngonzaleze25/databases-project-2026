@@ -10,6 +10,9 @@ from .models import (
     MovementType,
     ExerciseMuscleGroup,
     ExerciseEquipment,
+    User,
+    SavedWorkout,
+    SavedWorkoutExercise
 )
 from .forms import WorkoutBuilderForm, ExerciseFilterForm
 
@@ -130,8 +133,62 @@ def workout_result(request):
         "goal_type_name": goal_type_name,
         "muscle_group": muscle_group_name,
         "difficulty": difficulty_name,
+        "muscle_group_obj": muscle_group,
+        "difficulty_obj": difficulty,
     }
     return render(request, "workouts/workout_result.html", context)
+
+from django.shortcuts import redirect
+
+def save_workout(request):
+    if request.method == 'POST':
+        user_name = request.POST.get('user_name')
+        user_email = request.POST.get('user_email')
+        muscle_group_id = request.POST.get('muscle_group_id')
+        difficulty_id = request.POST.get('difficulty_id')
+        num_exercises = request.POST.get('num_exercises')
+        exercise_ids = request.POST.getlist('exercise_ids')
+        slots = request.POST.getlist('slots')
+        
+        # Get or create user
+        user, _ = User.objects.get_or_create(email=user_email, defaults={'name': user_name})
+        
+        # Create SavedWorkout
+        mg = MuscleGroup.objects.filter(pk=muscle_group_id).first() if muscle_group_id else None
+        diff = DifficultyLevel.objects.filter(pk=difficulty_id).first() if difficulty_id else None
+        
+        workout = SavedWorkout.objects.create(
+            user=user,
+            target_muscle_group=mg,
+            difficulty=diff,
+            num_exercises=int(num_exercises) if num_exercises else len(exercise_ids)
+        )
+        
+        # Add exercises
+        for i, (ex_id, slot) in enumerate(zip(exercise_ids, slots)):
+            ex = Exercise.objects.get(pk=ex_id)
+            SavedWorkoutExercise.objects.create(
+                saved_workout=workout,
+                exercise=ex,
+                exercise_order=i+1,
+                slot_type=slot
+            )
+            
+        return redirect('dashboard', email=user.email)
+    return redirect('home')
+
+def dashboard(request, email=None):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        return redirect('dashboard', email=email)
+        
+    user = None
+    workouts = []
+    if email:
+        user = get_object_or_404(User, email=email)
+        workouts = SavedWorkout.objects.filter(user=user).prefetch_related('workout_exercises__exercise')
+        
+    return render(request, 'workouts/dashboard.html', {'user_obj': user, 'workouts': workouts})
 
 
 def exercise_list(request):
