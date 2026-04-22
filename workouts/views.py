@@ -94,12 +94,21 @@ def workout_result(request):
                     workout_items.append({'exercise': ex, 'slot': 'supporting'})
                     used_ids.append(ex.pk)
 
-            # 5. Pad if necessary
+            # 5. Pad if necessary (strict constraints)
             if len(workout_items) < num_exercises:
                 pad_qs = base_qs.filter(
                     exercise_muscle_groups__muscle_group=muscle_group
                 ).exclude(pk__in=used_ids).order_by('?')
                 for ex in pad_qs[:num_exercises - len(workout_items)]:
+                    workout_items.append({'exercise': ex, 'slot': 'targeted'})
+                    used_ids.append(ex.pk)
+                    
+            # 6. Ultimate Pad: ignore difficulty and equipment if still empty
+            if len(workout_items) < num_exercises:
+                ultimate_pad_qs = Exercise.objects.filter(
+                    exercise_muscle_groups__muscle_group=muscle_group
+                ).exclude(pk__in=used_ids).order_by('?')
+                for ex in ultimate_pad_qs[:num_exercises - len(workout_items)]:
                     workout_items.append({'exercise': ex, 'slot': 'targeted'})
                     used_ids.append(ex.pk)
         else:
@@ -182,37 +191,37 @@ def exercise_detail(request, pk):
 
 
 def analytics(request):
-    exercises_by_muscle = (
-        ExerciseMuscleGroup.objects.filter(role="primary")
-        .annotate(name=F("muscle_group__name"))
-        .values("name")
+    exercises_by_muscle = [
+        {"name": row["muscle_group__name"], "total": row["total"]}
+        for row in ExerciseMuscleGroup.objects.filter(role="primary")
+        .values("muscle_group__name")
         .annotate(total=Count("exercise"))
-        .order_by("name")
-    )
+        .order_by("muscle_group__name")
+    ]
 
-    exercises_by_difficulty = (
-        Exercise.objects.annotate(name=F("difficulty__name"))
-        .values("name")
+    exercises_by_difficulty = [
+        {"name": row["difficulty__name"], "total": row["total"]}
+        for row in Exercise.objects.values("difficulty__name")
         .annotate(total=Count("exercise_id"))
-        .order_by("name")
-    )
+        .order_by("difficulty__name")
+    ]
 
-    exercises_by_equipment = (
-        ExerciseEquipment.objects.annotate(name=F("equipment__name"))
-        .values("name")
+    exercises_by_equipment = [
+        {"name": row["equipment__name"], "total": row["total"]}
+        for row in ExerciseEquipment.objects.values("equipment__name")
         .annotate(total=Count("exercise"))
-        .order_by("name")
-    )
+        .order_by("equipment__name")
+    ]
 
     compound_total = Exercise.objects.filter(is_compound=True).count()
     isolation_total = Exercise.objects.filter(is_compound=False).count()
 
-    exercises_by_movement = (
-        Exercise.objects.annotate(name=F("movement_type__name"))
-        .values("name")
+    exercises_by_movement = [
+        {"name": row["movement_type__name"], "total": row["total"]}
+        for row in Exercise.objects.values("movement_type__name")
         .annotate(total=Count("exercise_id"))
-        .order_by("name")
-    )
+        .order_by("movement_type__name")
+    ]
 
     context = {
         "exercises_by_muscle": exercises_by_muscle,
