@@ -121,16 +121,46 @@ def workout_result(request):
                 workout_items.append({'exercise': ex, 'slot': 'targeted'})
 
         # Get nutrition recommendations based on goal
+        calories_burned = 0
         if goal_type:
             goal_type_name = goal_type.name
             from .models import FoodItem
-            recommended_foods = FoodItem.objects.filter(ideal_for_goal=goal_type)
+            foods = list(FoodItem.objects.filter(ideal_for_goal=goal_type))
+            
+            # Estimate calories burned
+            diff_multiplier = 1.5
+            if difficulty and difficulty.name == 'Beginner': diff_multiplier = 1.0
+            elif difficulty and difficulty.name == 'Advanced': diff_multiplier = 2.0
+            
+            calories_burned = int(len(workout_items) * 45 * diff_multiplier)
+            
+            recommended_foods = []
+            for f in foods:
+                # Suggest a portion that covers ~50% of the calories burned
+                target_food_calories = calories_burned * 0.5
+                portion_g = int((target_food_calories / f.calories_per_100g) * 100)
+                
+                # Calculate exact macros for this portion
+                portion_protein = round((f.protein_g / 100) * portion_g)
+                portion_carbs = round((f.carbs_g / 100) * portion_g)
+                portion_fat = round((f.fat_g / 100) * portion_g)
+                
+                recommended_foods.append({
+                    'name': f.name,
+                    'category': f.category,
+                    'portion_g': portion_g,
+                    'calories': int(target_food_calories),
+                    'protein': portion_protein,
+                    'carbs': portion_carbs,
+                    'fat': portion_fat,
+                })
 
     context = {
         "form": form,
         "workout_items": workout_items,
         "recommended_foods": recommended_foods,
         "goal_type_name": goal_type_name,
+        "calories_burned": calories_burned,
         "muscle_group": muscle_group_name,
         "difficulty": difficulty_name,
         "muscle_group_obj": muscle_group,

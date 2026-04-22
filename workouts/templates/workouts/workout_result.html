@@ -90,13 +90,14 @@
   {% if recommended_foods %}
   <div class="nutrition-section">
     <h2>Recommended Post-Workout Meals</h2>
-    <p>Based on your <strong>{{ goal_type_name }}</strong> goal, we recommend incorporating these foods:</p>
+    <p>Based on your <strong>{{ goal_type_name }}</strong> goal and the estimated <strong>{{ calories_burned }} calories</strong> burned during this workout, we recommend these exact portions:</p>
     <table class="table">
       <thead>
         <tr>
           <th>Food</th>
           <th>Category</th>
-          <th>Calories (per 100g)</th>
+          <th>Suggested Portion</th>
+          <th>Calories</th>
           <th>Protein (g)</th>
           <th>Carbs (g)</th>
           <th>Fat (g)</th>
@@ -107,10 +108,11 @@
         <tr>
           <td><strong>{{ food.name }}</strong></td>
           <td><span class="tag">{{ food.category }}</span></td>
-          <td>{{ food.calories_per_100g }}</td>
-          <td>{{ food.protein_g }}</td>
-          <td>{{ food.carbs_g }}</td>
-          <td>{{ food.fat_g }}</td>
+          <td style="color: var(--accent); font-weight: bold; font-family: var(--font-mono);">{{ food.portion_g }}g</td>
+          <td>{{ food.calories }}</td>
+          <td>{{ food.protein }}</td>
+          <td>{{ food.carbs }}</td>
+          <td>{{ food.fat }}</td>
         </tr>
         {% endfor %}
       </tbody>

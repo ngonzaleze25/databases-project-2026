@@ -69,4 +69,27 @@
   </form>
 </div>
 
+<div id="loading-overlay" style="display: none; position: fixed; inset: 0; background: rgba(20,20,20,0.95); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+  <div style="width: 60px; height: 60px; border: 4px solid var(--dark-mid); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 2rem;"></div>
+  <h2 style="font-family: var(--font-display); color: var(--accent); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.5rem;">Analyzing Muscle Relationships</h2>
+  <p style="color: var(--muted); font-family: var(--font-mono); font-size: 0.9rem;">Optimizing biomechanics and generating routine...</p>
+</div>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const overlay = document.getElementById('loading-overlay');
+    overlay.style.display = 'flex';
+    
+    setTimeout(function() {
+      form.submit();
+    }, 1600);
+  });
+</script>
+
 {% endblock %}
