@@ -486,6 +486,26 @@ class SavedWorkoutExercise(models.Model):
 
     def __str__(self):
         return f"#{self.exercise_order} {self.exercise.name} ({self.slot_type})"
+        
+    def primary_muscle(self):
+        emg = self.exercise.exercise_muscle_groups.filter(role='primary').first()
+        return emg.muscle_group.name if emg else "Mixed"
+        
+    def recommended_sets_reps(self):
+        goal = None
+        if self.saved_workout.user:
+            profile = getattr(self.saved_workout.user, 'profile', None)
+            if profile: goal = profile.primary_goal
+            
+        if goal:
+            egp = self.exercise.exercise_goal_profiles.filter(goal_type=goal).first()
+            if egp:
+                if egp.duration_seconds:
+                    return f"{egp.default_sets} sets x {egp.duration_seconds}s"
+                return f"{egp.default_sets} sets of {egp.rep_low}-{egp.rep_high}"
+                
+        # Fallback
+        return "3 sets of 8-12"
 
 
 # ---------------------------------------------------------------------------

@@ -371,10 +371,29 @@ def generate_program(request):
 
         # Pad if missing
         if len(selected) < 5:
-            pad_qs = base_qs.exclude(pk__in=used_ids).distinct()
+            pad_qs = base_qs.exclude(pk__in=used_ids)
+            if 'Push' in day_name or 'Chest' in day_name:
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Push')
+            elif 'Pull' in day_name or 'Back' in day_name:
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Pull')
+            elif 'Legs' in day_name or 'Lower' in day_name:
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Legs')
+            elif 'Upper' in day_name:
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__region='Upper Body')
+                
+            pad_qs = pad_qs.distinct()
             pad_list = list(pad_qs)
             random.shuffle(pad_list)
             for ex in pad_list[:5-len(selected)]:
+                selected.append((ex, 'targeted'))
+                used_ids.append(ex.pk)
+                
+        # Ultimate Pad
+        if len(selected) < 5:
+            upad = Exercise.objects.exclude(pk__in=used_ids).distinct()
+            ulist = list(upad)
+            random.shuffle(ulist)
+            for ex in ulist[:5-len(selected)]:
                 selected.append((ex, 'targeted'))
                 used_ids.append(ex.pk)
                 
