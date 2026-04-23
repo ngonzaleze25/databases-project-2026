@@ -209,7 +209,7 @@ def save_workout(request):
 @login_required
 def dashboard(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    programs = WorkoutProgram.objects.filter(user=request.user).prefetch_related('workouts__workout_exercises__exercise')
+    programs = WorkoutProgram.objects.filter(user=request.user, is_active=True).prefetch_related('workouts__workout_exercises__exercise')
     workouts = SavedWorkout.objects.filter(user=request.user, program__isnull=True).prefetch_related('workout_exercises__exercise')
         
     return render(request, 'workouts/dashboard.html', {
@@ -285,15 +285,102 @@ def generate_program(request):
     profile = request.user.profile
     split = profile.preferred_split or 'PPL'
     
-    # Simple generation logic for MVP: just create an empty program with days
+    # Optional logic: deactivate old active programs
+    WorkoutProgram.objects.filter(user=request.user, is_active=True).update(is_active=False)
+    
     program = WorkoutProgram.objects.create(
         user=request.user,
         name=f"My 8-Week {split} Plan"
     )
     
-    days = ['Push Day', 'Pull Day', 'Legs Day'] if split == 'PPL' else ['Upper Day', 'Lower Day', 'Full Body']
+    if split == 'PPL':
+        days = ['Push Day', 'Pull Day', 'Legs Day']
+    elif split == 'UpperLower':
+        days = ['Upper Day', 'Lower Day', 'Upper Day', 'Lower Day']
+    elif split == 'BroSplit':
+        days = ['Chest Day', 'Back Day', 'Shoulder Day', 'Legs Day', 'Arm Day']
+    else:
+        days = ['Full Body', 'Full Body', 'Full Body']
+        
+    # Trim or loop based on days_per_week
+    target_days = profile.days_per_week or 3
+    final_days = [days[i % len(days)] for i in range(target_days)]
     
-    for i, day_name in enumerate(days):
+    base_qs = Exercise.objects.all()
+    user_equipment = profile.available_equipment.all()
+    if user_equipment.exists():
+        base_qs = base_qs.filter(exercise_equipment__equipment__in=user_equipment)
+    if profile.fitness_level:
+        base_qs = base_qs.filter(difficulty=profile.fitness_level)
+    
+    import random
+    
+    def get_optimal_exercises(day_name, base_qs):
+        def get_for_muscle(muscle_name, count, is_compound=None, exclude_ids=[]):
+            qs = base_qs.filter(exercise_muscle_groups__muscle_group__name=muscle_name)
+            if is_compound is not None:
+                qs = qs.filter(is_compound=is_compound)
+            qs = qs.exclude(pk__in=exclude_ids).distinct()
+            lst = list(qs)
+            random.shuffle(lst)
+            return lst[:count]
+            
+        selected = []
+        used_ids = []
+        
+        def add_ex(lst, role):
+            for ex in lst:
+                if ex.pk not in used_ids:
+                    selected.append((ex, role))
+                    used_ids.append(ex.pk)
+                    
+        if 'Push' in day_name or 'Chest' in day_name:
+            add_ex(get_for_muscle('Chest', 1, is_compound=True), 'compound')
+            add_ex(get_for_muscle('Chest', 1, is_compound=False, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Shoulders', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Triceps', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Chest', 1, exclude_ids=used_ids), 'targeted')
+            
+        elif 'Pull' in day_name or 'Back' in day_name:
+            add_ex(get_for_muscle('Back', 1, is_compound=True), 'compound')
+            add_ex(get_for_muscle('Back', 1, is_compound=False, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Biceps', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Rear Delts', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Core', 1, exclude_ids=used_ids), 'targeted')
+            
+        elif 'Legs' in day_name or 'Lower' in day_name:
+            add_ex(get_for_muscle('Quads', 1, is_compound=True), 'compound')
+            add_ex(get_for_muscle('Hamstrings', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Glutes', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Calves', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Quads', 1, exclude_ids=used_ids), 'targeted')
+            
+        elif 'Upper' in day_name:
+            add_ex(get_for_muscle('Chest', 1, is_compound=True), 'compound')
+            add_ex(get_for_muscle('Back', 1, is_compound=True, exclude_ids=used_ids), 'compound')
+            add_ex(get_for_muscle('Shoulders', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Biceps', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Triceps', 1, exclude_ids=used_ids), 'targeted')
+            
+        else: # Full body or fallback
+            add_ex(get_for_muscle('Quads', 1, is_compound=True), 'compound')
+            add_ex(get_for_muscle('Chest', 1, is_compound=True, exclude_ids=used_ids), 'compound')
+            add_ex(get_for_muscle('Back', 1, is_compound=True, exclude_ids=used_ids), 'compound')
+            add_ex(get_for_muscle('Shoulders', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Core', 1, exclude_ids=used_ids), 'targeted')
+
+        # Pad if missing
+        if len(selected) < 5:
+            pad_qs = base_qs.exclude(pk__in=used_ids).distinct()
+            pad_list = list(pad_qs)
+            random.shuffle(pad_list)
+            for ex in pad_list[:5-len(selected)]:
+                selected.append((ex, 'targeted'))
+                used_ids.append(ex.pk)
+                
+        return selected[:5]
+
+    for i, day_name in enumerate(final_days):
         workout = SavedWorkout.objects.create(
             user=request.user,
             program=program,
@@ -302,14 +389,14 @@ def generate_program(request):
             num_exercises=5
         )
         
-        # Populate with some random exercises just to show the feature works
-        exercises = Exercise.objects.order_by('?')[:5]
-        for j, ex in enumerate(exercises):
+        exercises_to_save = get_optimal_exercises(day_name, base_qs)
+        
+        for j, (ex, slot) in enumerate(exercises_to_save):
             SavedWorkoutExercise.objects.create(
                 saved_workout=workout,
                 exercise=ex,
                 exercise_order=j+1,
-                slot_type='targeted' if j > 0 else 'compound'
+                slot_type=slot
             )
         
     return redirect('dashboard')

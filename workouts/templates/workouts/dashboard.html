@@ -51,7 +51,8 @@
               <thead>
                 <tr>
                   <th>Exercise</th>
-                  <th>Type</th>
+                  <th>Muscle</th>
+                  <th>Sets/Reps</th>
                   <th>Role</th>
                   <th>Actions</th>
                 </tr>
@@ -64,7 +65,8 @@
                         {{ we.exercise.name }}
                       </a>
                     </td>
-                    <td><span class="tag">{{ we.exercise.movement_type }}</span></td>
+                    <td><span style="color: var(--muted); font-size: 0.9rem;">{{ we.primary_muscle }}</span></td>
+                    <td><span class="tag" style="background: rgba(255,255,255,0.05);">{{ we.recommended_sets_reps }}</span></td>
                     <td>
                       <div class="workout-card__slot-badge slot-badge--{{ we.slot_type }}" style="position: relative; top: 0; right: 0; display: inline-block;">
                         {{ we.slot_type|upper }}
@@ -98,7 +100,8 @@
               <tr>
                 <th style="width: 50px;">#</th>
                 <th>Exercise</th>
-                <th>Type</th>
+                <th>Muscle</th>
+                <th>Sets/Reps</th>
                 <th>Role</th>
               </tr>
             </thead>
@@ -111,7 +114,8 @@
                       {{ we.exercise.name }}
                     </a>
                   </td>
-                  <td><span class="tag">{{ we.exercise.movement_type }}</span></td>
+                  <td><span style="color: var(--muted); font-size: 0.9rem;">{{ we.primary_muscle }}</span></td>
+                  <td><span class="tag" style="background: rgba(255,255,255,0.05);">{{ we.recommended_sets_reps }}</span></td>
                   <td>
                     <div class="workout-card__slot-badge slot-badge--{{ we.slot_type }}" style="position: relative; top: 0; right: 0; display: inline-block;">
                       {{ we.slot_type|upper }}
