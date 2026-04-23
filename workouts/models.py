@@ -492,20 +492,31 @@ class SavedWorkoutExercise(models.Model):
         return emg.muscle_group.name if emg else "Mixed"
         
     def recommended_sets_reps(self):
-        goal = None
+        goal_name = ""
         if self.saved_workout.user:
             profile = getattr(self.saved_workout.user, 'profile', None)
-            if profile: goal = profile.primary_goal
-            
-        if goal:
-            egp = self.exercise.exercise_goal_profiles.filter(goal_type=goal).first()
-            if egp:
-                if egp.duration_seconds:
-                    return f"{egp.default_sets} sets x {egp.duration_seconds}s"
-                return f"{egp.default_sets} sets of {egp.rep_low}-{egp.rep_high}"
+            if profile and profile.primary_goal:
+                goal_name = profile.primary_goal.name.lower()
                 
-        # Fallback
-        return "3 sets of 8-12"
+        # Default fallback to the exercise's baseline
+        sets = self.exercise.default_sets or 3
+        reps = self.exercise.default_reps or 10
+        
+        # Override based on user's primary goal and exercise slot
+        if 'strength' in goal_name:
+            if self.slot_type == 'compound':
+                return "5 sets of 3-5 reps"
+            else:
+                return "3 sets of 8-10 reps"
+        elif 'hypertrophy' in goal_name or 'muscle' in goal_name:
+            if self.slot_type == 'compound':
+                return "3 sets of 8-10 reps"
+            else:
+                return "3 sets of 10-15 reps"
+        elif 'endurance' in goal_name or 'weight loss' in goal_name:
+            return "3 sets of 15-20 reps"
+            
+        return f"{sets} sets of {reps} reps"
 
 
 # ---------------------------------------------------------------------------
