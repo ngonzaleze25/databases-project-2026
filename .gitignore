@@ -1,5 +1,5 @@
 venv/
 __pycache__/
 *.pyc
-db.sqlite3
+# db.sqlite3 (Commented out so the seeded DB is pushed to GitHub for the demo)
 .DS_Store
