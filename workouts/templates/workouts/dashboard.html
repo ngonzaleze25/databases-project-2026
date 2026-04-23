@@ -72,13 +72,18 @@
                         {{ we.slot_type|upper }}
                       </div>
                     </td>
-                    <td>
-                      <a href="https://www.youtube.com/results?search_query={{ we.exercise.name|urlencode }}+exercise+tutorial" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.85rem;">▶ Tutorial</a>
+                    <td style="display: flex; gap: 0.8rem; align-items: center;">
+                      <a href="https://www.youtube.com/results?search_query={{ we.exercise.name|urlencode }}+exercise+tutorial" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 1rem;" title="Tutorial">▶</a>
+                      <a href="{% url 'swap_workout_exercise' we.id %}" style="color: var(--muted); text-decoration: none; font-size: 1rem;" title="Swap Exercise">🔄</a>
+                      <a href="{% url 'remove_workout_exercise' we.id %}" style="color: #ff4444; text-decoration: none; font-size: 1rem;" title="Remove Exercise">❌</a>
                     </td>
                   </tr>
                 {% endfor %}
               </tbody>
             </table>
+            <div style="margin-top: 1rem; text-align: center;">
+              <a href="{% url 'add_workout_exercise' workout.id %}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.4rem 1rem; border-style: dashed; opacity: 0.7;">+ Add Exercise to {{ workout.day_name }}</a>
+            </div>
           </div>
         {% endfor %}
       </div>

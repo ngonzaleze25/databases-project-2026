@@ -14,4 +14,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("questionnaire/", views.questionnaire, name="questionnaire"),
     path("program/generate/", views.generate_program, name="generate_program"),
+    path("workout/<int:workout_id>/add/", views.add_workout_exercise, name="add_workout_exercise"),
+    path("workout/exercise/<int:we_id>/swap/", views.swap_workout_exercise, name="swap_workout_exercise"),
+    path("workout/exercise/<int:we_id>/remove/", views.remove_workout_exercise, name="remove_workout_exercise"),
 ]

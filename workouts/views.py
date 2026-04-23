@@ -339,7 +339,7 @@ def generate_program(request):
             add_ex(get_for_muscle('Chest', 1, is_compound=False, exclude_ids=used_ids), 'targeted')
             add_ex(get_for_muscle('Shoulders', 1, exclude_ids=used_ids), 'targeted')
             add_ex(get_for_muscle('Triceps', 1, exclude_ids=used_ids), 'targeted')
-            add_ex(get_for_muscle('Chest', 1, exclude_ids=used_ids), 'targeted')
+            add_ex(get_for_muscle('Shoulders', 1, exclude_ids=used_ids), 'targeted')
             
         elif 'Pull' in day_name or 'Back' in day_name:
             add_ex(get_for_muscle('Back', 1, is_compound=True), 'compound')
@@ -530,3 +530,125 @@ def analytics(request):
     }
 
     return render(request, "workouts/analytics.html", context)
+
+@login_required
+def add_workout_exercise(request, workout_id):
+    workout = get_object_or_404(SavedWorkout, pk=workout_id, user=request.user)
+    
+    used_ids = [we.exercise.pk for we in workout.workout_exercises.all()]
+    base_qs = Exercise.objects.all()
+    
+    profile = getattr(request.user, 'profile', None)
+    if profile:
+        user_equipment = profile.available_equipment.all()
+        if user_equipment.exists():
+            base_qs = base_qs.filter(exercise_equipment__equipment__in=user_equipment)
+        if profile.fitness_level:
+            base_qs = base_qs.filter(difficulty=profile.fitness_level)
+
+    pad_qs = base_qs.exclude(pk__in=used_ids)
+    
+    day_name = workout.day_name or ""
+    if 'Push' in day_name or 'Chest' in day_name:
+        pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Push', exercise_muscle_groups__role='primary')
+    elif 'Pull' in day_name or 'Back' in day_name:
+        pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Pull', exercise_muscle_groups__role='primary')
+    elif 'Legs' in day_name or 'Lower' in day_name:
+        pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Legs', exercise_muscle_groups__role='primary')
+    elif 'Upper' in day_name:
+        pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__region='Upper Body', exercise_muscle_groups__role='primary')
+        
+    pad_qs = pad_qs.distinct()
+    pad_list = list(pad_qs)
+    
+    import random
+    random.shuffle(pad_list)
+    new_ex = pad_list[0] if pad_list else None
+    
+    if not new_ex:
+        # Ultimate fallback ignoring equipment/difficulty but still matching muscle group
+        upad = Exercise.objects.exclude(pk__in=used_ids)
+        if 'Push' in day_name or 'Chest' in day_name:
+            upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Push', exercise_muscle_groups__role='primary')
+        elif 'Pull' in day_name or 'Back' in day_name:
+            upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Pull', exercise_muscle_groups__role='primary')
+        elif 'Legs' in day_name or 'Lower' in day_name:
+            upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Legs', exercise_muscle_groups__role='primary')
+        elif 'Upper' in day_name:
+            upad = upad.filter(exercise_muscle_groups__muscle_group__region='Upper Body', exercise_muscle_groups__role='primary')
+            
+        upad = upad.distinct()
+        ulist = list(upad)
+        random.shuffle(ulist)
+        new_ex = ulist[0] if ulist else None
+        
+    if new_ex:
+        order = workout.workout_exercises.count() + 1
+        SavedWorkoutExercise.objects.create(
+            saved_workout=workout,
+            exercise=new_ex,
+            exercise_order=order,
+            slot_type='targeted'
+        )
+        
+    return redirect('dashboard')
+
+@login_required
+def swap_workout_exercise(request, we_id):
+    we = get_object_or_404(SavedWorkoutExercise, pk=we_id, saved_workout__user=request.user)
+    workout = we.saved_workout
+    
+    used_ids = [w.exercise.pk for w in workout.workout_exercises.all()]
+    primary_muscle_name = we.primary_muscle()
+    
+    base_qs = Exercise.objects.exclude(pk__in=used_ids)
+    profile = getattr(request.user, 'profile', None)
+    if profile:
+        user_equipment = profile.available_equipment.all()
+        if user_equipment.exists():
+            base_qs = base_qs.filter(exercise_equipment__equipment__in=user_equipment)
+        if profile.fitness_level:
+            base_qs = base_qs.filter(difficulty=profile.fitness_level)
+
+    swap_qs = base_qs.filter(
+        exercise_muscle_groups__muscle_group__name=primary_muscle_name,
+        exercise_muscle_groups__role='primary',
+        is_compound=(we.slot_type == 'compound')
+    ).distinct()
+    
+    import random
+    swap_list = list(swap_qs)
+    random.shuffle(swap_list)
+    new_ex = swap_list[0] if swap_list else None
+    
+    # If no strict match, drop the compound requirement
+    if not new_ex:
+        swap_qs = base_qs.filter(
+            exercise_muscle_groups__muscle_group__name=primary_muscle_name,
+            exercise_muscle_groups__role='primary'
+        ).distinct()
+        swap_list = list(swap_qs)
+        random.shuffle(swap_list)
+        new_ex = swap_list[0] if swap_list else None
+        
+    # If still no match, drop user constraints
+    if not new_ex:
+        upad = Exercise.objects.exclude(pk__in=used_ids).filter(
+            exercise_muscle_groups__muscle_group__name=primary_muscle_name,
+            exercise_muscle_groups__role='primary'
+        ).distinct()
+        ulist = list(upad)
+        random.shuffle(ulist)
+        new_ex = ulist[0] if ulist else None
+        
+    if new_ex:
+        we.exercise = new_ex
+        we.save()
+        
+    return redirect('dashboard')
+
+@login_required
+def remove_workout_exercise(request, we_id):
+    we = get_object_or_404(SavedWorkoutExercise, pk=we_id, saved_workout__user=request.user)
+    we.delete()
+    return redirect('dashboard')
