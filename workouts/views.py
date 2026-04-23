@@ -369,7 +369,7 @@ def generate_program(request):
             add_ex(get_for_muscle('Shoulders', 1, exclude_ids=used_ids), 'targeted')
             add_ex(get_for_muscle('Core', 1, exclude_ids=used_ids), 'targeted')
 
-        # Pad if missing
+        # Strict padding within the day's movement category
         if len(selected) < 5:
             pad_qs = base_qs.exclude(pk__in=used_ids)
             if 'Push' in day_name or 'Chest' in day_name:
@@ -388,9 +388,19 @@ def generate_program(request):
                 selected.append((ex, 'targeted'))
                 used_ids.append(ex.pk)
                 
-        # Ultimate Pad
+        # Loose padding (ignore user equipment/difficulty, but STRICTLY keep the correct muscle category)
         if len(selected) < 5:
-            upad = Exercise.objects.exclude(pk__in=used_ids).distinct()
+            upad = Exercise.objects.exclude(pk__in=used_ids)
+            if 'Push' in day_name or 'Chest' in day_name:
+                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Push')
+            elif 'Pull' in day_name or 'Back' in day_name:
+                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Pull')
+            elif 'Legs' in day_name or 'Lower' in day_name:
+                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Legs')
+            elif 'Upper' in day_name:
+                upad = upad.filter(exercise_muscle_groups__muscle_group__region='Upper Body')
+                
+            upad = upad.distinct()
             ulist = list(upad)
             random.shuffle(ulist)
             for ex in ulist[:5-len(selected)]:
