@@ -8,35 +8,83 @@
 <div class="page-header page-header--split">
   <div>
     <h1>My Dashboard</h1>
-    <p class="page-subtitle">
-      {% if user_obj %}
-        Welcome back, {{ user_obj.name }} ({{ user_obj.email }})
-      {% else %}
-        Enter your email to view your saved workouts.
-      {% endif %}
-    </p>
+    <p class="page-subtitle">Welcome back, {{ user_obj.first_name|default:user_obj.username }}!</p>
   </div>
-  {% if user_obj %}
-    <a href="{% url 'dashboard_index' %}" class="btn btn-secondary">Switch User</a>
-  {% endif %}
 </div>
 
-{% if not user_obj %}
-<div class="card form-card">
-  <form method="post" action="{% url 'dashboard_index' %}">
-    {% csrf_token %}
-    <div class="form-group">
-      <label>Email Address</label>
-      <input type="email" name="email" placeholder="john@example.com" required>
+{% if not programs %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--white); margin-bottom: 1rem;">Choose Your Path</h2>
+    <p style="color: var(--muted); margin-bottom: 2.5rem; max-width: 500px; margin-left: auto; margin-right: auto;">Do you want to generate a quick one-off workout for today, or do you want to build a fully personalized 8-week routine?</p>
+    
+    <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{% url 'home' %}" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.1rem; flex-direction: column; gap: 0.5rem; min-width: 250px;">
+        <span style="font-size: 1.5rem;">⚡</span>
+        Quick Workout Planner
+      </a>
+      <a href="{% url 'questionnaire' %}" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem; flex-direction: column; gap: 0.5rem; min-width: 250px;">
+        <span style="font-size: 1.5rem;">📅</span>
+        Get My 8-Week Plan
+      </a>
     </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary">View Dashboard</button>
-    </div>
-  </form>
-</div>
+  </div>
 {% else %}
 
+  {% for program in programs %}
+    <div class="card" style="margin-bottom: 2rem; border-color: var(--accent);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="font-family: var(--font-display); font-size: 1.8rem; color: var(--accent); margin-bottom: 0.2rem;">{{ program.name }}</h2>
+          <p class="form-help">Started on {{ program.created_at|date:"F j, Y" }}</p>
+        </div>
+        <a href="{% url 'questionnaire' %}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Adjust Plan</a>
+      </div>
+      
+      <div class="workout-list">
+        {% for workout in program.workouts.all %}
+          <div class="card" style="background: var(--dark); padding: 1.5rem;">
+            <h3 style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 1rem;">
+              {{ workout.day_name }} <span style="color: var(--muted); font-size: 1rem; font-weight: 400; margin-left: 0.5rem;">(Day {{ workout.day_number }})</span>
+            </h3>
+            
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Exercise</th>
+                  <th>Type</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for we in workout.workout_exercises.all %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'exercise_detail' we.exercise.pk %}" style="color: var(--white); text-decoration: none; font-weight: 600;">
+                        {{ we.exercise.name }}
+                      </a>
+                    </td>
+                    <td><span class="tag">{{ we.exercise.movement_type }}</span></td>
+                    <td>
+                      <div class="workout-card__slot-badge slot-badge--{{ we.slot_type }}" style="position: relative; top: 0; right: 0; display: inline-block;">
+                        {{ we.slot_type|upper }}
+                      </div>
+                    </td>
+                    <td>
+                      <a href="https://www.youtube.com/results?search_query={{ we.exercise.name|urlencode }}+exercise+tutorial" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.85rem;">▶ Tutorial</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
   {% if workouts %}
+    <h2 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: 3rem; margin-bottom: 1rem;">Quick Workouts (One-Offs)</h2>
     <div class="workout-list">
       {% for workout in workouts %}
         <div class="card" style="margin-bottom: 2rem;">
@@ -75,11 +123,6 @@
           </table>
         </div>
       {% endfor %}
-    </div>
-  {% else %}
-    <div class="empty-state">
-      <p>You haven't saved any workouts yet.</p>
-      <a href="{% url 'home' %}" class="btn btn-primary">Build a Workout</a>
     </div>
   {% endif %}
 

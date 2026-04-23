@@ -17,7 +17,8 @@ from .models import (
     ExerciseEquipment,
     ExerciseGoalProfile,
     MuscleGroupRelationship,
-    User,
+    UserProfile,
+    WorkoutProgram,
     SavedWorkout,
     SavedWorkoutExercise,
 )
@@ -105,6 +106,7 @@ admin.site.register(ExerciseMuscleGroup)
 admin.site.register(ExerciseEquipment)
 
 # Persistence models (stretch goal)
-admin.site.register(User)
+admin.site.register(UserProfile)
+admin.site.register(WorkoutProgram)
 admin.site.register(SavedWorkout)
 admin.site.register(SavedWorkoutExercise)

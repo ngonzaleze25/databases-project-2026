@@ -375,29 +375,56 @@ class ExerciseGoalProfile(models.Model):
 # 5. Persistence models (stretch goal — include only if time allows)
 # ---------------------------------------------------------------------------
 
-class User(models.Model):
+from django.contrib.auth.models import User as AuthUser
+
+class UserProfile(models.Model):
     """
-    Minimal user record for saving workouts.
-    NOT a full Django auth user. No login system.
-    Just enough to associate a saved workout with a name and email.
+    Extended user profile for the questionnaire and program generation.
     """
-    name  = models.CharField(max_length=200)
-    email = models.EmailField(unique=True)
+    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, related_name='profile')
+    age = models.PositiveIntegerField(null=True, blank=True)
+    weight_kg = models.FloatField(null=True, blank=True)
+    gender = models.CharField(max_length=20, null=True, blank=True)
+    fitness_level = models.ForeignKey(DifficultyLevel, on_delete=models.SET_NULL, null=True, blank=True)
+    primary_goal = models.ForeignKey(GoalType, on_delete=models.SET_NULL, null=True, blank=True)
+    available_equipment = models.ManyToManyField(Equipment, blank=True)
+    preferred_split = models.CharField(max_length=50, null=True, blank=True)
+    days_per_week = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return self.user.username
+
+class WorkoutProgram(models.Model):
+    """
+    Represents an 8-week or custom multi-day workout plan.
+    """
+    user = models.ForeignKey(AuthUser, on_delete=models.CASCADE, related_name='programs')
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} for {self.user.username}"
 
 
 class SavedWorkout(models.Model):
     """
-    Records a generated workout session.
-    Parent record for a list of SavedWorkoutExercise rows.
+    Records a generated workout session or a day in a WorkoutProgram.
     """
     user                  = models.ForeignKey(
-                                User,
+                                AuthUser,
                                 on_delete=models.CASCADE,
                                 related_name='saved_workouts'
                             )
+    program               = models.ForeignKey(
+                                WorkoutProgram,
+                                on_delete=models.CASCADE,
+                                null=True, blank=True,
+                                related_name='workouts'
+                            )
+    day_number            = models.PositiveIntegerField(null=True, blank=True)
+    day_name              = models.CharField(max_length=50, null=True, blank=True)
+
     target_muscle_group   = models.ForeignKey(
                                 MuscleGroup,
                                 on_delete=models.SET_NULL,
@@ -414,10 +441,10 @@ class SavedWorkout(models.Model):
     created_at            = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['program', 'day_number', '-created_at']
 
     def __str__(self):
-        return f"{self.user.name} — {self.target_muscle_group} ({self.created_at.date()})"
+        return f"{self.user.username} — {self.day_name or self.target_muscle_group} ({self.created_at.date()})"
 
 
 class SavedWorkoutExercise(models.Model):

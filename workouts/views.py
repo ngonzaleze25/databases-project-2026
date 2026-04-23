@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 
 from django.db.models import Count, F
+from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 
 from .models import (
     Exercise,
@@ -10,9 +13,11 @@ from .models import (
     MovementType,
     ExerciseMuscleGroup,
     ExerciseEquipment,
-    User,
+    UserProfile,
+    WorkoutProgram,
     SavedWorkout,
-    SavedWorkoutExercise
+    SavedWorkoutExercise,
+    GoalType
 )
 from .forms import WorkoutBuilderForm, ExerciseFilterForm
 
@@ -170,31 +175,25 @@ def workout_result(request):
 
 from django.shortcuts import redirect
 
+@login_required
 def save_workout(request):
     if request.method == 'POST':
-        user_name = request.POST.get('user_name')
-        user_email = request.POST.get('user_email')
         muscle_group_id = request.POST.get('muscle_group_id')
         difficulty_id = request.POST.get('difficulty_id')
         num_exercises = request.POST.get('num_exercises')
         exercise_ids = request.POST.getlist('exercise_ids')
         slots = request.POST.getlist('slots')
         
-        # Get or create user
-        user, _ = User.objects.get_or_create(email=user_email, defaults={'name': user_name})
-        
-        # Create SavedWorkout
         mg = MuscleGroup.objects.filter(pk=muscle_group_id).first() if muscle_group_id else None
         diff = DifficultyLevel.objects.filter(pk=difficulty_id).first() if difficulty_id else None
         
         workout = SavedWorkout.objects.create(
-            user=user,
+            user=request.user,
             target_muscle_group=mg,
             difficulty=diff,
             num_exercises=int(num_exercises) if num_exercises else len(exercise_ids)
         )
         
-        # Add exercises
         for i, (ex_id, slot) in enumerate(zip(exercise_ids, slots)):
             ex = Exercise.objects.get(pk=ex_id)
             SavedWorkoutExercise.objects.create(
@@ -204,21 +203,116 @@ def save_workout(request):
                 slot_type=slot
             )
             
-        return redirect('dashboard', email=user.email)
+        return redirect('dashboard')
     return redirect('home')
 
-def dashboard(request, email=None):
+@login_required
+def dashboard(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    programs = WorkoutProgram.objects.filter(user=request.user).prefetch_related('workouts__workout_exercises__exercise')
+    workouts = SavedWorkout.objects.filter(user=request.user, program__isnull=True).prefetch_related('workout_exercises__exercise')
+        
+    return render(request, 'workouts/dashboard.html', {
+        'user_obj': request.user,
+        'profile': profile,
+        'programs': programs,
+        'workouts': workouts
+    })
+
+def register_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        if not AuthUser.objects.filter(username=email).exists():
+            user = AuthUser.objects.create_user(username=email, email=email, password=password, first_name=name)
+            UserProfile.objects.create(user=user)
+            login(request, user)
+            return redirect('questionnaire')
+    return render(request, 'workouts/register.html')
+
+def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
-        return redirect('dashboard', email=email)
+        password = request.POST.get('password')
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            return render(request, 'workouts/login.html', {'error': 'Invalid credentials'})
+    return render(request, 'workouts/login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
+@login_required
+def questionnaire(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+        profile.age = request.POST.get('age')
+        profile.weight_kg = request.POST.get('weight')
+        profile.gender = request.POST.get('gender')
         
-    user = None
-    workouts = []
-    if email:
-        user = get_object_or_404(User, email=email)
-        workouts = SavedWorkout.objects.filter(user=user).prefetch_related('workout_exercises__exercise')
+        diff_id = request.POST.get('difficulty')
+        if diff_id: profile.fitness_level = DifficultyLevel.objects.get(pk=diff_id)
         
-    return render(request, 'workouts/dashboard.html', {'user_obj': user, 'workouts': workouts})
+        goal_id = request.POST.get('goal')
+        if goal_id: profile.primary_goal = GoalType.objects.get(pk=goal_id)
+        
+        profile.preferred_split = request.POST.get('split')
+        profile.days_per_week = request.POST.get('days')
+        
+        equip_ids = request.POST.getlist('equipment')
+        if equip_ids:
+            profile.available_equipment.set(Equipment.objects.filter(pk__in=equip_ids))
+            
+        profile.save()
+        return redirect('generate_program')
+        
+    difficulties = DifficultyLevel.objects.all()
+    goals = GoalType.objects.all()
+    equipment = Equipment.objects.all()
+    return render(request, 'workouts/questionnaire.html', {
+        'difficulties': difficulties,
+        'goals': goals,
+        'equipment': equipment
+    })
+
+@login_required
+def generate_program(request):
+    profile = request.user.profile
+    split = profile.preferred_split or 'PPL'
+    
+    # Simple generation logic for MVP: just create an empty program with days
+    program = WorkoutProgram.objects.create(
+        user=request.user,
+        name=f"My 8-Week {split} Plan"
+    )
+    
+    days = ['Push Day', 'Pull Day', 'Legs Day'] if split == 'PPL' else ['Upper Day', 'Lower Day', 'Full Body']
+    
+    for i, day_name in enumerate(days):
+        workout = SavedWorkout.objects.create(
+            user=request.user,
+            program=program,
+            day_number=i+1,
+            day_name=day_name,
+            num_exercises=5
+        )
+        
+        # Populate with some random exercises just to show the feature works
+        exercises = Exercise.objects.order_by('?')[:5]
+        for j, ex in enumerate(exercises):
+            SavedWorkoutExercise.objects.create(
+                saved_workout=workout,
+                exercise=ex,
+                exercise_order=j+1,
+                slot_type='targeted' if j > 0 else 'compound'
+            )
+        
+    return redirect('dashboard')
 
 
 def exercise_list(request):

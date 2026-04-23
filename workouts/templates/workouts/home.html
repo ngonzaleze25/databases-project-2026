@@ -10,6 +10,16 @@
   <p class="page-subtitle">Select your target muscle, difficulty, and available equipment.</p>
 </div>
 
+{% if not user.is_authenticated %}
+<div class="card" style="background: rgba(232, 255, 0, 0.05); border-color: var(--accent); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h2 style="font-family: var(--font-display); color: var(--accent); margin-bottom: 0.2rem;">Want a fully personalized 8-week program?</h2>
+    <p style="color: var(--muted); font-size: 0.95rem;">Create a free account to take the questionnaire and get your routine.</p>
+  </div>
+  <a href="{% url 'register' %}" class="btn btn-primary">Sign Up Now</a>
+</div>
+{% endif %}
+
 <div class="card form-card">
   <form method="post" action="{% url 'workout_result' %}">
     {% csrf_token %}

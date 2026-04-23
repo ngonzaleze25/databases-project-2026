@@ -1,0 +1,91 @@
+{% extends "workouts/base.html" %}
+{% load static %}
+
+{% block title %}Personalize Your Plan{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Let's Build Your Program</h1>
+  <p class="page-subtitle">We need a few details to generate your perfect 8-week workout plan.</p>
+</div>
+
+<div class="card form-card">
+  <form method="post" action="{% url 'questionnaire' %}">
+    {% csrf_token %}
+
+    <h2 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Basic Metrics</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" name="age" min="16" max="100" placeholder="25" required>
+      </div>
+      <div class="form-group">
+        <label>Weight (kg)</label>
+        <input type="number" name="weight" step="0.1" placeholder="75.0" required>
+      </div>
+      <div class="form-group">
+        <label>Gender</label>
+        <select name="gender" required>
+          <option value="" disabled selected>Select</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fitness Level</label>
+        <select name="difficulty" required>
+          <option value="" disabled selected>Select</option>
+          {% for d in difficulties %}
+            <option value="{{ d.pk }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <h2 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--accent); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Goals & Schedule</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Primary Goal</label>
+        <select name="goal" required>
+          <option value="" disabled selected>Select</option>
+          {% for g in goals %}
+            <option value="{{ g.pk }}">{{ g.name }}</option>
+          {% endfor %}
+          <option value="">Not Sure</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Preferred Routine Split</label>
+        <select name="split" required>
+          <option value="PPL">Push / Pull / Legs</option>
+          <option value="UpperLower">Upper / Lower</option>
+          <option value="BroSplit">Body Part "Bro" Split</option>
+          <option value="FullBody">Full Body</option>
+          <option value="PPL" selected>Not Sure (Recommend For Me)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Days per Week</label>
+        <input type="number" name="days" min="2" max="7" placeholder="3" value="3" required>
+      </div>
+    </div>
+
+    <h2 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--accent); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Available Equipment</h2>
+    <div class="form-group form-group--full">
+      <p class="form-help" style="margin-bottom: 0.5rem;">Check everything you have access to. We will save this so you never have to enter it again.</p>
+      <div class="checkbox-grid">
+        {% for eq in equipment %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="equipment" value="{{ eq.pk }}"> {{ eq.name }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Generate My 8-Week Plan &rarr;</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
