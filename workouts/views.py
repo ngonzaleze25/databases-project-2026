@@ -317,7 +317,7 @@ def generate_program(request):
     
     def get_optimal_exercises(day_name, base_qs):
         def get_for_muscle(muscle_name, count, is_compound=None, exclude_ids=[]):
-            qs = base_qs.filter(exercise_muscle_groups__muscle_group__name=muscle_name)
+            qs = base_qs.filter(exercise_muscle_groups__muscle_group__name=muscle_name, exercise_muscle_groups__role='primary')
             if is_compound is not None:
                 qs = qs.filter(is_compound=is_compound)
             qs = qs.exclude(pk__in=exclude_ids).distinct()
@@ -373,13 +373,13 @@ def generate_program(request):
         if len(selected) < 5:
             pad_qs = base_qs.exclude(pk__in=used_ids)
             if 'Push' in day_name or 'Chest' in day_name:
-                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Push')
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Push', exercise_muscle_groups__role='primary')
             elif 'Pull' in day_name or 'Back' in day_name:
-                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Pull')
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Pull', exercise_muscle_groups__role='primary')
             elif 'Legs' in day_name or 'Lower' in day_name:
-                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Legs')
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__movement_category='Legs', exercise_muscle_groups__role='primary')
             elif 'Upper' in day_name:
-                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__region='Upper Body')
+                pad_qs = pad_qs.filter(exercise_muscle_groups__muscle_group__region='Upper Body', exercise_muscle_groups__role='primary')
                 
             pad_qs = pad_qs.distinct()
             pad_list = list(pad_qs)
@@ -392,13 +392,13 @@ def generate_program(request):
         if len(selected) < 5:
             upad = Exercise.objects.exclude(pk__in=used_ids)
             if 'Push' in day_name or 'Chest' in day_name:
-                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Push')
+                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Push', exercise_muscle_groups__role='primary')
             elif 'Pull' in day_name or 'Back' in day_name:
-                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Pull')
+                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Pull', exercise_muscle_groups__role='primary')
             elif 'Legs' in day_name or 'Lower' in day_name:
-                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Legs')
+                upad = upad.filter(exercise_muscle_groups__muscle_group__movement_category='Legs', exercise_muscle_groups__role='primary')
             elif 'Upper' in day_name:
-                upad = upad.filter(exercise_muscle_groups__muscle_group__region='Upper Body')
+                upad = upad.filter(exercise_muscle_groups__muscle_group__region='Upper Body', exercise_muscle_groups__role='primary')
                 
             upad = upad.distinct()
             ulist = list(upad)
